@@ -15,7 +15,11 @@
 				} else {
 					candidates.add($cursor, num);
 				}
-				userGrid.set($cursor, 0);
+				// Notes 只修改 candidates store，不触碰 userGrid/game history
+				// 若格子当前有真实数字，才需要清除它（否则领域历史会被 note 操作污染）
+				if ($userGrid[$cursor.y][$cursor.x] !== 0) {
+					userGrid.set($cursor, 0);
+				}
 			} else {
 				if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
 					candidates.clear($cursor);
