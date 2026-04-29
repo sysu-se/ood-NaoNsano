@@ -1,11 +1,14 @@
 import {
+  assertValidPuzzleGrid,
   assertValidGrid,
   assertValidMove,
   cloneGrid,
   findHiddenSingles,
   findNakedSingles,
   getCandidates,
+  gridsEqual,
   hasConflicts,
+  isGridComplete,
 } from './grid.js'
 import { Sudoku } from './sudoku.js'
 
@@ -99,6 +102,7 @@ export class Game {
     }
 
     this._initialGrid = sudoku.getGrid()
+    assertValidPuzzleGrid(this._initialGrid)
     this._givens = deriveGivens(this._initialGrid)
     this._sudoku = sudoku.clone()
     this._moves = []
@@ -216,8 +220,23 @@ export class Game {
       throw new Error(`Cannot hint filled cell at (${row},${col})`)
     }
 
+    assert(!hasConflicts(current), 'Cannot generate hint for a conflicting board')
+
     const solved = solver(current)
     assertValidGrid(solved, 'Solved Sudoku grid')
+    assert(isGridComplete(solved), 'Solver must return a complete grid')
+    assert(!hasConflicts(solved), 'Solver must return a conflict-free grid')
+
+    for (let currentRow = 0; currentRow < 9; currentRow += 1) {
+      for (let currentCol = 0; currentCol < 9; currentCol += 1) {
+        if (current[currentRow][currentCol] !== 0) {
+          assert(
+            solved[currentRow][currentCol] === current[currentRow][currentCol],
+            `Solver must preserve existing cell at (${currentRow},${currentCol})`,
+          )
+        }
+      }
+    }
 
     const value = solved[row][col]
     if (!Number.isInteger(value) || value < 1 || value > 9) {
@@ -477,6 +496,16 @@ export class Game {
         game._currentIndex = json.checkpointIndex
         game._exploreMoves = exploreMoves.concat(exploreRedoMoves)
         game._exploreIndex = exploreMoves.length
+
+        const checkpointFromMoves = new Sudoku(game._initialGrid)
+        for (let i = 0; i < game._checkpointIndex; i += 1) {
+          checkpointFromMoves.guess(game._moves[i])
+        }
+
+        assert(
+          gridsEqual(checkpointFromMoves.getGrid(), game._checkpointGrid),
+          'Game checkpointGrid is inconsistent with moves',
+        )
       }
 
       game._rebuildSudoku()

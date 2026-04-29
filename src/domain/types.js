@@ -19,6 +19,12 @@
  * @property {Grid} initialGrid
  * @property {Move[]} moves
  * @property {Move[]} redoMoves
+ * @property {boolean} [exploring]
+ * @property {Grid|null} [checkpointGrid]
+ * @property {number|null} [checkpointIndex]
+ * @property {Move[]} [exploreMoves]
+ * @property {Move[]} [exploreRedoMoves]
+ * @property {string[]} [failedPaths]
  */
 
 /**

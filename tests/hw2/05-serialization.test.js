@@ -38,4 +38,20 @@ describe('HW2 exploration serialization', () => {
     expect(restored.getCurrentGrid()[0][0]).toBe(1)
     expect(restored.canRedo()).toBe(true)
   })
+
+  it('rejects exploration JSON with checkpointGrid inconsistent with moves', async () => {
+    const { createGameFromJSON } = await loadDomainApi()
+    const checkpointGrid = emptyGrid()
+
+    expect(() => createGameFromJSON({
+      initialGrid: emptyGrid(),
+      moves: [{ row: 0, col: 0, value: 1 }],
+      redoMoves: [],
+      exploring: true,
+      checkpointGrid,
+      checkpointIndex: 1,
+      exploreMoves: [],
+      exploreRedoMoves: [],
+    })).toThrow(/checkpointGrid is inconsistent/)
+  })
 })

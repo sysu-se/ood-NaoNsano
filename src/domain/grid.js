@@ -36,6 +36,12 @@ export const assertValidGrid = (grid, label = 'Sudoku grid') => {
   return grid
 }
 
+export const assertValidPuzzleGrid = (grid, label = 'Sudoku puzzle') => {
+  assertValidGrid(grid, label)
+  assert(!hasConflicts(grid), `${label} must not contain conflicting given numbers`)
+  return grid
+}
+
 export const assertValidMove = (move) => {
   assert(move && typeof move === 'object', 'Move must be an object')
   assert(isIntegerBetween(move.row, 0, 8), 'Move row must be an integer between 0 and 8')
@@ -288,3 +294,12 @@ export const getConflictingCells = (grid) => {
 }
 
 export const hasConflicts = (grid) => getConflictingCells(grid).length > 0
+
+export const gridsEqual = (left, right) => {
+  assertValidGrid(left, 'Left grid')
+  assertValidGrid(right, 'Right grid')
+
+  return left.every((row, rowIndex) =>
+    row.every((cell, colIndex) => cell === right[rowIndex][colIndex]),
+  )
+}
