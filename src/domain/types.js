@@ -20,3 +20,13 @@
  * @property {Move[]} moves
  * @property {Move[]} redoMoves
  */
+
+/**
+ * @typedef {Object} HintResult
+ * @property {number} row
+ * @property {number} col
+ * @property {number|null} value
+ * @property {'naked-single'|'hidden-single'} technique
+ * @property {string} reason
+ * @property {'position'|'answer'} level
+ */

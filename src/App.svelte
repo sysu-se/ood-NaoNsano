@@ -7,6 +7,7 @@
 	import Board from './components/Board/index.svelte';
 	import Controls from './components/Controls/index.svelte';
 	import Header from './components/Header/index.svelte';
+	import HintPanel from './components/HintPanel.svelte';
 	import Modal from './components/Modal/index.svelte';
 
 	gameWon.subscribe(won => {
@@ -40,6 +41,7 @@
 <!-- Sudoku Field -->
 <section>
 	<Board />
+	<HintPanel />
 </section>
 
 <!-- Keyboard -->
