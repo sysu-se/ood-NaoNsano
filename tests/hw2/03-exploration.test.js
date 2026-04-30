@@ -47,4 +47,31 @@ describe('HW2 exploration mode', () => {
     expect(game.getCurrentGrid()[0][0]).toBe(1)
     expect(game.getCurrentGrid()[0][1]).toBe(0)
   })
+
+  it('rejects committing conflicting exploration branches', async () => {
+    const { createGame, createSudoku } = await loadDomainApi()
+    const game = createGame({ sudoku: createSudoku(emptyGrid()) })
+
+    game.startExplore()
+    game.guess({ row: 0, col: 0, value: 1 })
+    game.guess({ row: 0, col: 1, value: 1 })
+
+    expect(() => game.commitExplore()).toThrow(/conflicting exploration/)
+    expect(game.isExploring()).toBe(true)
+    expect(game.getCurrentGrid()[0][0]).toBe(1)
+    expect(game.getCurrentGrid()[0][1]).toBe(1)
+  })
+
+  it('rejects committing known failed exploration paths', async () => {
+    const { createGame, createSudoku } = await loadDomainApi()
+    const game = createGame({ sudoku: createSudoku(emptyGrid()) })
+
+    game.startExplore()
+    game.guess({ row: 0, col: 0, value: 1 })
+    game.markExploreFailed()
+
+    expect(() => game.commitExplore()).toThrow(/known failed/)
+    expect(game.isExploring()).toBe(true)
+    expect(game.getCurrentGrid()[0][0]).toBe(1)
+  })
 })

@@ -152,6 +152,25 @@ describe('HW1 game undo / redo', () => {
     expect(game.getSudoku().getGrid()[0][2]).toBe(0)
   })
 
+  it('validates solver output against the original board snapshot', async () => {
+    const { createGame, createSudoku } = await loadDomainApi()
+    const game = createGame({ sudoku: createSudoku(makePuzzle()) })
+
+    expect(() => game.getHint(0, 2, (grid) => {
+      for (let row = 0; row < 9; row += 1) {
+        for (let col = 0; col < 9; col += 1) {
+          if (grid[row][col] !== 0) {
+            grid[row][col] = otherSolvedGrid[row][col]
+          }
+        }
+      }
+
+      return otherSolvedGrid
+    })).toThrow(/preserve existing cell/)
+
+    expect(game.getCurrentGrid()).toEqual(makePuzzle())
+  })
+
   it('rejects hints for givens, filled cells, and invalid solver output', async () => {
     const { createGame, createSudoku } = await loadDomainApi()
     const game = createGame({ sudoku: createSudoku(makePuzzle()) })

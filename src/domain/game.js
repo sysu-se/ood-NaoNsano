@@ -222,7 +222,8 @@ export class Game {
 
     assert(!hasConflicts(current), 'Cannot generate hint for a conflicting board')
 
-    const solved = solver(current)
+    const solverInput = cloneGrid(current)
+    const solved = solver(solverInput)
     assertValidGrid(solved, 'Solved Sudoku grid')
     assert(isGridComplete(solved), 'Solver must return a complete grid')
     assert(!hasConflicts(solved), 'Solver must return a conflict-free grid')
@@ -333,6 +334,13 @@ export class Game {
 
   commitExplore() {
     this._assertExploring()
+
+    const current = this._sudoku.getGrid()
+    assert(!hasConflicts(current), 'Cannot commit a conflicting exploration branch')
+    assert(
+      !this._failedPaths.has(this._fingerprint(current)),
+      'Cannot commit a known failed exploration path',
+    )
 
     const committedMoves = this._exploreMoves.slice(0, this._exploreIndex)
     this._moves = this._moves.slice(0, this._checkpointIndex).concat(cloneMoves(committedMoves))
