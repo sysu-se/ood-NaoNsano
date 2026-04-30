@@ -1,7 +1,7 @@
 <script>
 	import { candidates } from '@sudoku/stores/candidates';
 	import { redoMove, undoMove } from '@sudoku/game';
-	import { userGrid } from '@sudoku/stores/grid';
+	import { gameState, userGrid } from '@sudoku/stores/grid';
 	import { cursor } from '@sudoku/stores/cursor';
 	import { hints } from '@sudoku/stores/hints';
 	import { notes } from '@sudoku/stores/notes';
@@ -10,16 +10,28 @@
 	import { gamePaused } from '@sudoku/stores/game';
 
 	const { canUndo, canRedo } = userGrid;
+	let hintMode = 'answer';
 
 	$: hintsAvailable = $hints > 0;
+	$: selectedEmpty = $cursor.x !== null && $cursor.y !== null && $userGrid[$cursor.y][$cursor.x] === 0;
 
 	function handleHint() {
+		if (hintMode === 'candidates') {
+			userGrid.applyCandidateHint($cursor);
+			return;
+		}
+
+		if (hintMode === 'position') {
+			userGrid.applyPositionHint();
+			return;
+		}
+
 		if (hintsAvailable) {
 			if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
 				candidates.clear($cursor);
 			}
 
-			userGrid.applyHint($cursor);
+			userGrid.applyAnswerHint();
 		}
 	}
 </script>
@@ -38,7 +50,16 @@
 		</svg>
 	</button>
 
-	<button class="btn btn-round btn-badge" disabled={$keyboardDisabled || !hintsAvailable || $userGrid[$cursor.y][$cursor.x] !== 0} on:click={handleHint} title="Hints ({$hints})">
+	<select class="hint-select" bind:value={hintMode} disabled={$gamePaused || $keyboardDisabled} title="Hint level">
+		<option value="candidates">Candidates</option>
+		<option value="position">Position</option>
+		<option value="answer">Answer</option>
+	</select>
+
+	<button class="btn btn-round btn-badge"
+	        disabled={$gamePaused || $keyboardDisabled || (hintMode === 'answer' && !hintsAvailable) || (hintMode === 'candidates' && !selectedEmpty)}
+	        on:click={handleHint}
+	        title="Hints ({$hints})">
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
 		</svg>
@@ -47,6 +68,14 @@
 			<span class="badge" class:badge-primary={hintsAvailable}>{$hints}</span>
 		{/if}
 	</button>
+
+	{#if $gameState && $gameState.canExplore}
+		<button class="btn btn-round" disabled={$gamePaused || $keyboardDisabled} on:click={userGrid.startExplore} title="Explore">
+			<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a7 7 0 00-7 7v2a3 3 0 003 3h1v-4H6v-1a5 5 0 1110 3.75V16h1a3 3 0 003-3v-2a7 7 0 00-7-7h-2zM9 20h6" />
+			</svg>
+		</button>
+	{/if}
 
 	<button class="btn btn-round btn-badge" on:click={notes.toggle} title="Notes ({$notes ? 'ON' : 'OFF'})">
 		<svg class="icon-outline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,5 +105,9 @@
 
 	.badge-primary {
 		@apply bg-primary;
+	}
+
+	.hint-select {
+		@apply h-12 px-2 rounded-lg border border-gray-300 bg-white text-sm;
 	}
 </style>

@@ -1,6 +1,13 @@
 import { Game } from './game.js'
 import { Sudoku } from './sudoku.js'
 
+export {
+  findHiddenSingles,
+  findNakedSingles,
+  getAllCandidates,
+  getCandidates,
+} from './grid.js'
+
 export function createSudoku(input) {
   return new Sudoku(input)
 }

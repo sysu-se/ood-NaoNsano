@@ -1,10 +1,11 @@
 <script>
 	import { BOX_SIZE } from '@sudoku/constants';
 	import { gamePaused } from '@sudoku/stores/game';
-	import { grid, userGrid, invalidCells } from '@sudoku/stores/grid';
+	import { grid, userGrid, invalidCells, gameState } from '@sudoku/stores/grid';
 	import { settings } from '@sudoku/stores/settings';
 	import { cursor } from '@sudoku/stores/cursor';
 	import { candidates } from '@sudoku/stores/candidates';
+	import { hintDisplay } from '@sudoku/stores/hintDisplay';
 	import Cell from './Cell.svelte';
 
 	function isSelected(cursorStore, x, y) {
@@ -27,9 +28,26 @@
 
 		return gridStore[cursorStore.y][cursorStore.x];
 	}
+
+	function isHintCell(hintStore, x, y) {
+		return hintStore.hintCell && hintStore.hintCell.x === x && hintStore.hintCell.y === y;
+	}
+
+	function getCandidatesForCell(userCandidates, hintStore, x, y, value) {
+		if (value === 0 && isHintCell(hintStore, x, y) && hintStore.candidates.length) {
+			return hintStore.candidates;
+		}
+
+		return userCandidates[x + ',' + y];
+	}
 </script>
 
 <div class="board-padding relative z-10">
+	{#if $gameState && $gameState.isExploring}
+		<div class="explore-banner">
+			Explore mode - {$gameState.exploreMoveCount} moves
+		</div>
+	{/if}
 	<div class="max-w-xl relative">
 		<div class="w-full" style="padding-top: 100%"></div>
 	</div>
@@ -42,13 +60,14 @@
 					<Cell {value}
 					      cellY={y + 1}
 					      cellX={x + 1}
-					      candidates={$candidates[x + ',' + y]}
+					      candidates={getCandidatesForCell($candidates, $hintDisplay, x, y, value)}
 					      disabled={$gamePaused}
 					      selected={isSelected($cursor, x, y)}
 					      userNumber={$grid[y][x] === 0}
 					      sameArea={$settings.highlightCells && !isSelected($cursor, x, y) && isSameArea($cursor, x, y)}
 					      sameNumber={$settings.highlightSame && value && !isSelected($cursor, x, y) && getValueAtCursor($userGrid, $cursor) === value}
-					      conflictingNumber={$settings.highlightConflicting && $grid[y][x] === 0 && $invalidCells.includes(x + ',' + y)} />
+					      conflictingNumber={$settings.highlightConflicting && $grid[y][x] === 0 && $invalidCells.includes(x + ',' + y)}
+					      hintHighlight={isHintCell($hintDisplay, x, y)} />
 				{/each}
 			{/each}
 
@@ -60,5 +79,9 @@
 <style>
 	.board-padding {
 		@apply px-4 pb-4;
+	}
+
+	.explore-banner {
+		@apply max-w-xl mx-auto mb-2 px-3 py-2 rounded bg-secondary text-primary-darker text-sm font-semibold;
 	}
 </style>
